@@ -21,6 +21,8 @@ int main(int ac, char **av)
 
     int fileIndex = openFile(av[1], MODE_CREATE);
 
+    printf("open okay!\n");
+    
     if (fileIndex == -1) {
         if (_result == FS_DUPLICATE_FILE) {
             printf("\n%s already exists!\n", av[1]);
@@ -40,7 +42,7 @@ int main(int ac, char **av)
     	writeFile(fileIndex, block, sizeof(char), dataCount);
     	dataCount = fread(block, sizeof(char), BLOCKSIZE, fp);
     }
-
+    printf("write okay!\n");
     fclose(fp);
 
     closeFile(fileIndex);

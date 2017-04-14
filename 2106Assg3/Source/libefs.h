@@ -14,7 +14,7 @@ enum
 /* Open File Table structure. Feel free to modify */
 typedef struct oft
 {
-  char *filename; //filename 
+  char filename[MAX_FNAME_LEN];
   int taken; // indicates if the slot is taken. 0 if free, 1 if taken.
   unsigned char openMode; // Mode selected
   unsigned int blockSize; // Size of each block
