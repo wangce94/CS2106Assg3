@@ -148,7 +148,7 @@ void readFile(int fp, void *buffer, unsigned int dataSize, unsigned int dataCoun
 	
 	while(_oft[fp].filePtr < fileLen && numBytesRead < (dataSize * dataCount)) {
 		//if the readPtr reaches the end of the block, load next block
-		if(_oft[fp].readPtr >= _fs.blockSize) {
+		if(_oft[fp].readPtr >= _fs->blockSize) {
 			readBlock(_oft[fp].buffer, returnBlockNumFromInode(_oft[fp].inodeBuffer, _oft[fp].filePtr));
 			_oft[fp].readPtr = 0;
 		}
@@ -175,7 +175,7 @@ void delFile(const char *filename)
 	
 	//free Inode
 	unsigned long *inode_buffer = makeInodeBuffer();
-	loadInode(inode_buffer, getInodeForFile(filename);
+	loadInode(inode_buffer, getInodeForFile(filename));
 
 	//mark every block in inode as free
 	for(int i = 0; i < _fs->numInodeEntries; i++) {
