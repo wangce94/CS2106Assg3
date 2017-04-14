@@ -30,13 +30,14 @@ int main(int ac, char **av)
         closeFS();
         return -1;
     }
+	
+    char block[1024];
+    unsigned int dataCount = fread(block, sizeof(char), 1024, fp);
 
-    unsigned int dataCount = fread(block, sizeof(char), fs->blockSize, fp);
-    char block[fs->blockSize];
 
     while (dataCount) {
     	writeFile(fileIndex, block, sizeof(char), dataCount);
-    	dataCount = fread(block, sizeof(char), fs->blockSize, fp);
+    	dataCount = fread(block, sizeof(char), 1024, fp);
     }
 
     fclose(fp);
