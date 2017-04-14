@@ -15,7 +15,7 @@ void initFS(const char *fsPartitionName, const char *fsPassword)
 {
 	mountFS(fsPartitionName, fsPassword);
 	_fs = getFSInfo();
-	_oft = (TOpenFile *)malloc(_fs->maxFiles * sizeof(TOpenFile));
+	_oft = new TOpenFile[_fs->maxFiles]();
 }
 
 // Opens a file in the partition. Depending on mode, a new file may be created
@@ -31,18 +31,19 @@ int openFile(const char *filename, unsigned char mode)
 	for(i = 0; i < _fs->maxFiles; i++) {
 		if(_oft[i].taken == 0) {
 			oftIndex = i;
+			break;
 		}
 	}
 	if(oftIndex == -1) {
 		return -1;
 	}
-	
+
 	unsigned int fileLocation = findFile(filename);
 	if(fileLocation == FS_FILE_NOT_FOUND && (mode == MODE_NORMAL || mode == MODE_READ_ONLY)) {
 		return -1;
 	}
 	
-	
+
 	unsigned long *inode_buffer = NULL;
 	if(fileLocation == FS_FILE_NOT_FOUND && (mode == MODE_CREATE || mode == MODE_READ_APPEND)) {
 		//make directory 
@@ -58,14 +59,18 @@ int openFile(const char *filename, unsigned char mode)
 		//find free slot in directory
 		//enter name/pointer
 	}
-	
+
 	if(fileLocation != FS_FILE_NOT_FOUND && (mode == MODE_NORMAL || mode == MODE_READ_ONLY)) {
 		inode_buffer = makeInodeBuffer();
 		loadInode(inode_buffer, getInodeForFile(filename));
 	}
 	
 	//initialize OFT
-	strncpy(_oft[oftIndex].filename, filename, strlen(filename));
+	printf("%d\n", oftIndex);
+	printf("%s\n", filename);
+	printf("%d\n", MAX_FNAME_LEN);
+	printf("%d\n", strlen(_oft[oftIndex].filename));
+	strncpy(_oft[oftIndex].filename, filename, MAX_FNAME_LEN);
 	_oft[oftIndex].taken = 1;
 	_oft[oftIndex].openMode = mode;
 	_oft[oftIndex].blockSize = _fs->blockSize;
@@ -78,7 +83,7 @@ int openFile(const char *filename, unsigned char mode)
 	
 	//increase oft counter
 	_oftCount++;
-	
+	printf("4\n");
 	return oftIndex;
 }
 
