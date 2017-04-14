@@ -15,7 +15,7 @@ void initFS(const char *fsPartitionName, const char *fsPassword)
 {
 	mountFS(fsPartitionName, fsPassword);
 	_fs = getFSInfo();
-	_oft = malloc(_fs.maxFiles * sizeof(TOpenFile));
+	_oft = (TOpenFile *)malloc(_fs->maxFiles * sizeof(TOpenFile));
 }
 
 // Opens a file in the partition. Depending on mode, a new file may be created
@@ -28,7 +28,7 @@ int openFile(const char *filename, unsigned char mode)
 	int oftIndex = -1;
 	//check is there is space to open another file
 	int i;
-	for(i = 0; i < _fs.maxFiles; i++) {
+	for(i = 0; i < _fs->maxFiles; i++) {
 		if(_oft[i].taken == 0) {
 			oftIndex = i;
 		}
@@ -53,7 +53,7 @@ int openFile(const char *filename, unsigned char mode)
 		unsigned long freeBlock = findFreeBlock();
 		//mark block as busy
 		markBlockBusy(freeBlock);
-		setBlockNumInInode(freeINode, 0, freeBlock);
+		setBlockNumInInode(inode_buffer, 0, freeBlock);
 		fileLocation = directoryIndex;
 		//find free slot in directory
 		//enter name/pointer
@@ -61,16 +61,16 @@ int openFile(const char *filename, unsigned char mode)
 	
 	if(fileLocation != FS_FILE_NOT_FOUND && (mode == MODE_NORMAL || mode == MODE_READ_ONLY)) {
 		inode_buffer = makeInodeBuffer();
-		loadInode(inodeBuffer, getInodeForFile(filename));
+		loadInode(inode_buffer, getInodeForFile(filename));
 	}
 	
 	//initialize OFT
-	strncpy(_oft[oftIndex].filename, filename, strlen(filename);
+	strncpy(_oft[oftIndex].filename, filename, strlen(filename));
 	_oft[oftIndex].taken = 1;
 	_oft[oftIndex].openMode = mode;
 	_oft[oftIndex].blockSize = _fs->blockSize;
 	_oft[oftIndex].inode = getInodeForFile(filename);
-	_oft[oftIndex].inodeBuffer = iNodeBuffer;
+	_oft[oftIndex].inodeBuffer = inode_buffer;
 	_oft[oftIndex].buffer = makeDataBuffer();
 	_oft[oftIndex].writePtr = 0;
 	_oft[oftIndex].readPtr = 0;
@@ -87,7 +87,7 @@ int openFile(const char *filename, unsigned char mode)
 void writeFile(int fp, void *buffer, unsigned int dataSize, unsigned int dataCount)
 {
 	if (_oft[fp].openMode == MODE_READ_ONLY) {
-        return 0;
+        return;
     }
     unsigned long blockNumber;
     unsigned long dataLength = dataCount * dataSize;
@@ -104,10 +104,10 @@ void writeFile(int fp, void *buffer, unsigned int dataSize, unsigned int dataCou
             blockNumber = findFreeBlock();
             if (blockNumber == FS_FULL) {
             	printf("Couldn't find any free block.\n");
-            	return 0;
+            	return;
             }
-            setBlockNumInInode(_oft[fp].inodeBuffer, counter,
-                               _oft[fp].filePtr);
+            setBlockNumInInode(_oft[fp].inodeBuffer,
+                               _oft[fp].filePtr, blockNumber);
             markBlockBusy(blockNumber);
 
             // Clean up the buffer and reset the pointer
@@ -152,7 +152,7 @@ void readFile(int fp, void *buffer, unsigned int dataSize, unsigned int dataCoun
 			readBlock(_oft[fp].buffer, returnBlockNumFromInode(_oft[fp].inodeBuffer, _oft[fp].filePtr));
 			_oft[fp].readPtr = 0;
 		}
-		memcpy(buffer + numBytesRead, _oft[fp].buffer + _oft[fp].readPtr, sizeof(char));
+		memcpy(((char *)buffer) + numBytesRead, _oft[fp].buffer + _oft[fp].readPtr, sizeof(char));
 		_oft[fp].readPtr++;
 		_oft[fp].filePtr++;
 		numBytesRead++;
