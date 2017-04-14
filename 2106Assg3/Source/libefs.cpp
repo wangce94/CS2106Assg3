@@ -86,13 +86,51 @@ int openFile(const char *filename, unsigned char mode)
 // if file is opened in MODE_READ_ONLY mode.
 void writeFile(int fp, void *buffer, unsigned int dataSize, unsigned int dataCount)
 {
-	
+	if (_oft[fp].openMode == MODE_READ_ONLY) {
+        return 0;
+    }
+    unsigned long blockNumber;
+    unsigned long dataLength = dataCount * dataSize;
+
+    unsigned long fileLength = getFileLength(_oft[fp].filename);
+    updateDirectoryFileLength(_oft[fp].filename, fileLength + dataLength);
+
+    for (int i = 0; i < dataLength ; i++) {
+        if (_oft[fp].writePtr == _fs->blockSize) {
+            blockNumber = returnBlockNumFromInode(_oft[fp].inodeBuffer,
+                                                   _oft[fp].filePtr- 1);
+            writeBlock(_oft[fp].buffer, blockNumber);
+
+            blockNumber = findFreeBlock();
+            if (blockNumber == FS_FULL) {
+            	printf("Couldn't find any free block.\n");
+            	return 0;
+            }
+            setBlockNumInInode(_oft[fp].inodeBuffer, counter,
+                               _oft[fp].filePtr);
+            markBlockBusy(blockNumber);
+
+            // Clean up the buffer and reset the pointer
+            memset(_oft[fp].buffer, 0, _fs->blockSize);
+            _oft[fp].writePtr = 0;
+        }
+
+        // Copy by character
+        unsigned int cptr = _oft[fp].writePtr++;
+        memcpy(_oft[fp].buffer + cptr, ((char * ) buffer) + i, sizeof(char));
+        _oft[fp].filePtr++;
+    }
 }
 
 // Flush the file data to the disk. Writes all data buffers, updates directory,
 // free list and inode for this file.
 void flushFile(int fp)
 {
+	unsigned long blockNumber = returnBlockNumFromInode(_oft[fp].inodeBuffer, _oft[fp].filePtr);
+	writeBlock(_oft[fp].buffer, blockNumber);
+	updateFreeList();
+	saveInode(_oft[fp].inodeBuffer, _oft[fp].inode);
+	updateDirectory();
 }
 
 // Read data from the file.
@@ -153,8 +191,16 @@ void delFile(const char *filename)
 }
 
 // Close a file. Flushes all data buffers, updates inode, directory, etc.
-void closeFile(int fp);
+void closeFile(int fp) {
+	flushFile(fp);
+	free(_oft[fp].buffer);
+	free(_oft[fp].inodeBuffer);
+	//TODO: oft
+}
 
 // Unmount file system.
-void closeFS();
+void closeFS() {
+	unmountFS();
+	//TODO: free more things
+}
 
