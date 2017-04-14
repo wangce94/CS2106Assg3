@@ -13,6 +13,7 @@ int main(int ac, char **av)
 	unsigned int attr = getattr(av[1]);
 	if(attr == FS_FILE_NOT_FOUND) {
 		printf("FILE NOT FOUND\n");
+		closeFS();
 		return -1;
 	}
 	
@@ -21,6 +22,8 @@ int main(int ac, char **av)
 	} else {
 		printf("W\n");
 	}
+	
+	closeFS();
 
 	return 0;
 }

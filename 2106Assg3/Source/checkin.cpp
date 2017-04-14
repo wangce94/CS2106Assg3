@@ -31,6 +31,9 @@ int main(int ac, char **av)
         closeFS();
         return -1;
     }
+	
+    char block[1024];
+    unsigned int dataCount = fread(block, sizeof(char), 1024, fp);
 
     char block[BLOCKSIZE];
     unsigned int dataCount = fread(block, sizeof(char), BLOCKSIZE, fp);
