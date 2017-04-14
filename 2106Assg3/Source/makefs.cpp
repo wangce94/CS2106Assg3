@@ -46,7 +46,7 @@ int main(int ac, char **av)
   fs.numBlocks = fs.fsSize / fs.blockSize;
 
   // Allocate the bitmap
-  fs.bitmapLen = ceil(fs.numBlocks / 8);
+  fs.bitmapLen = ceil((double)fs.numBlocks / 8);
   bitmap = (char *) calloc(sizeof(char), fs.bitmapLen);
   memset(bitmap, 0xff, fs.bitmapLen);
 
