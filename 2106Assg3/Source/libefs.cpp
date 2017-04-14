@@ -58,12 +58,12 @@ int openFile(const char *filename, unsigned char mode)
 		//find free slot in directory
 		//enter name/pointer
 	}
-	
-	if(fileLocation != FS_FILE_NOT_FOUND && (mode == MODE_NORMAL || mode == MODE_READ_ONLY)) {
+	else if(fileLocation != FS_FILE_NOT_FOUND) {
 		inode_buffer = makeInodeBuffer();
 		loadInode(inode_buffer, getInodeForFile(filename));
 	}
 	
+	printf("oftIndex = %d\n", oftIndex);
 	//initialize OFT
 	strncpy(_oft[oftIndex].filename, filename, strlen(filename));
 	_oft[oftIndex].taken = 1;
