@@ -200,7 +200,8 @@ void closeFile(int fp) {
 	flushFile(fp);
 	free(_oft[fp].buffer);
 	free(_oft[fp].inodeBuffer);
-	//TODO: oft
+	_oft[fp].taken = 0;
+
 }
 
 // Unmount file system.
