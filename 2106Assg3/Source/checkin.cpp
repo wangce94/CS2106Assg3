@@ -1,4 +1,5 @@
 #include "libefs.h"
+#define BLOCKSIZE 8192
 
 int main(int ac, char **av)
 {
@@ -31,12 +32,13 @@ int main(int ac, char **av)
         return -1;
     }
 
-    unsigned int dataCount = fread(block, sizeof(char), fs->blockSize, fp);
-    char block[fs->blockSize];
+    char block[BLOCKSIZE];
+    unsigned int dataCount = fread(block, sizeof(char), BLOCKSIZE, fp);
+    
 
     while (dataCount) {
     	writeFile(fileIndex, block, sizeof(char), dataCount);
-    	dataCount = fread(block, sizeof(char), fs->blockSize, fp);
+    	dataCount = fread(block, sizeof(char), BLOCKSIZE, fp);
     }
 
     fclose(fp);
