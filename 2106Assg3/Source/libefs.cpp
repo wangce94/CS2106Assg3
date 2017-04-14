@@ -15,6 +15,7 @@ void initFS(const char *fsPartitionName, const char *fsPassword)
 {
 	mountFS(fsPartitionName, fsPassword);
 	_fs = getFSInfo();
+	// _oft = (TOpenFile *)malloc(_fs->maxFiles * sizeof(TOpenFile));
 	_oft = new TOpenFile[_fs->maxFiles]();
 }
 
@@ -31,47 +32,53 @@ int openFile(const char *filename, unsigned char mode)
 	for(i = 0; i < _fs->maxFiles; i++) {
 		if(_oft[i].taken == 0) {
 			oftIndex = i;
-			break;
 		}
 	}
 	if(oftIndex == -1) {
 		return -1;
 	}
 
+	printf("oftIndex = %d\n", oftIndex);
+	
 	unsigned int fileLocation = findFile(filename);
 	if(fileLocation == FS_FILE_NOT_FOUND && (mode == MODE_NORMAL || mode == MODE_READ_ONLY)) {
 		return -1;
 	}
-	
 
+	printf("fileLocation = %d\n", fileLocation);
+	
+	
 	unsigned long *inode_buffer = NULL;
 	if(fileLocation == FS_FILE_NOT_FOUND && (mode == MODE_CREATE || mode == MODE_READ_APPEND)) {
 		//make directory 
 		unsigned int directoryIndex = makeDirectoryEntry(filename, 0, 0);
+		printf("directoryIndex = %d\n", directoryIndex);
 		//find free descriptor
 		inode_buffer = makeInodeBuffer();
+		printf("makeInodeBuffer\n");
 		//enter attributes
 		unsigned long freeBlock = findFreeBlock();
+		printf("findFreeBlock\n");
 		//mark block as busy
 		markBlockBusy(freeBlock);
+		printf("markBlockBusy\n");
+
 		setBlockNumInInode(inode_buffer, 0, freeBlock);
+		printf("setBlockNumInInode\n");
+
 		fileLocation = directoryIndex;
+		printf("fileLocation = %d\n", fileLocation);
 		//find free slot in directory
 		//enter name/pointer
 	}
 	
-	else if(fileLocation != FS_FILE_NOT_FOUND) {
+	if(fileLocation != FS_FILE_NOT_FOUND) {
 		inode_buffer = makeInodeBuffer();
 		loadInode(inode_buffer, getInodeForFile(filename));
 	}
 	
-	printf("oftIndex = %d\n", oftIndex);
 	//initialize OFT
-	printf("%d\n", oftIndex);
-	printf("%s\n", filename);
-	printf("%d\n", MAX_FNAME_LEN);
-	printf("%d\n", strlen(_oft[oftIndex].filename));
-	strncpy(_oft[oftIndex].filename, filename, MAX_FNAME_LEN);
+	strncpy(_oft[oftIndex].filename, filename, strlen(filename));
 	_oft[oftIndex].taken = 1;
 	_oft[oftIndex].openMode = mode;
 	_oft[oftIndex].blockSize = _fs->blockSize;
@@ -84,7 +91,7 @@ int openFile(const char *filename, unsigned char mode)
 	
 	//increase oft counter
 	_oftCount++;
-	printf("4\n");
+	
 	return oftIndex;
 }
 
